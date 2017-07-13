@@ -16,19 +16,14 @@ from table_crc import *
 # ToDo: put ftp file transfer here! /ftp/upgrade/xxx_system.bin
 # ToDo: Send packet 3,4 via pyusb raw packet transfer
 
+packet_1 = ""
+packet_2 = ""
+packet_3 = ""
+packet_4 = ""
+
 def main():
-	probe_for_device()
-	configure_usb()
-	generate_update_packets()
-	write_packet(packet_1) # Enter upgrade mode (delete old file if exists)
-	write_packet(packet_2) # Enable Reporting
-	upload_binary()
-	write_packet(packet_3) # Send File size
-	write_packet(packet_4) # Send MD5 Hash for verification and Start Upgrade
-
-	print "Firmware Upload Complete"
-
-	return;
+    generate_update_packets()
+    return
 
 def probe_for_device():
 	# find our drone
@@ -43,7 +38,7 @@ def probe_for_device():
 	if dev.idVendor == 11427 and dev.idProduct == 31:
 		sys.stdout.write('Info: DJI Mavic Pro found.\n')
 
-		return;
+		return
 
 def configure_usb():
 	cfg = dev.get_active_configuration()
@@ -55,7 +50,7 @@ def configure_usb():
 	# dev.ctrl_transfer(reqType, bReq, wVal, wIndex, [])
 	ret = dev.ctrl_transfer(0xa1,0x21,0x0000,0x0004,[])
 
-	return;
+	return
 
 def write_packet(data):	
 	
@@ -63,7 +58,7 @@ def write_packet(data):
 	#data = [ int(''.join([data[i], data[i+1]]), base=16) for i in range(0, len(data), 2)]
 	print('%d/%d written' %(ep.write(data), len(data)))
 
-	return;
+	return
 
 def upload_binary():
 	print('Info: Connecting to FTP...\n')
@@ -128,10 +123,10 @@ def generate_update_packets():
 	crc = struct.pack('<H',crc)
 	packet_4 += crc
 
-	#print ' '.join(format(x, '02X') for x in packet_1)
-	#print ' '.join(format(x, '02X') for x in packet_2)
-	#print ' '.join(format(x, '02X') for x in packet_3)
-	#print ' '.join(format(x, '02X') for x in packet_4)
+	print '\\x'.join(format(x, '02X') for x in packet_1)
+	print '\\x'.join(format(x, '02X') for x in packet_2)
+	print '\\x'.join(format(x, '02X') for x in packet_3)
+	print '\\x'.join(format(x, '02X') for x in packet_4)
 
 	return;
 
