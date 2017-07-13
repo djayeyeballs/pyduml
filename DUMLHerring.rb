@@ -172,7 +172,7 @@ p3_pre =  "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + size             
 #crc = Array(crc)
 #.pack('V')
 
-crc = "\x72\x43"
+crc = "\x72\x43" # FIX ME HERE... 
 p3 = p3_pre + crc
 puts "Crc: #{crc}"
 sp.write p3
