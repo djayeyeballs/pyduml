@@ -111,15 +111,15 @@ parity = SerialPort::NONE
 
 sp = SerialPort.new(port_str, baud_rate, data_bits, stop_bits, parity)  
 
-# Enter upgrade mode (delete old file if exists)
+# Enter upgrade mode (delete old file if exists) - 0x7:received cmd to request enter upgrade mode, peer_id=0xa01, this_host=0x801
 p1 = "\x55\x16\x04\xFC\x2A\x28\x65\x57\x40\x00\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x27\xD3"
-#sp.write p1
-#puts "Enter upgrade mode"
+sp.write p1
+#puts "0x7:received cmd to request enter upgrade mode, peer_id=0xa01, this_host=0x801"
 
-# Enable Reporting
+# Enable Reporting - report status:  0:0
 p2 = "\x55\x0E\x04\x66\x2A\x28\x68\x57\x40\x00\x0C\x00\x88\x20"
 #sp.write p2
-#puts "Enable Reporting"
+#puts "report status:  0:0"
 
 # Drop upgrade package. 
 require 'net/ftp'
@@ -137,35 +137,39 @@ rescue Net::FTPPermError
 end
 ftp.close
 
+# python pyduml.py 
+# \x55\x16\x04\xFC\x2A\x28\x65\x57\x40\x00\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x27\xD3
+# \x55\x0E\x04\x66\x2A\x28\x68\x57\x40\x00\x0C\x00\x88\x20
+# \x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00\x00\x2A\xA0\x06\x00\x00\x00\x00\x00\x00\x02\x04\x72\x43
+# \x55\x1E\x04\x8A\x2A\x28\xF6\x57\x40\x00\x0A\x00\x66\x02\xC2\x6E\xD0\x72\x95\x81\x24\x68\x53\xD7\xC9\x88\xA4\xAE\x7A\xE4
 
+# Send image size - 0x8:whole image size: 111159808, path = 2, type = 4
 # 551A04B12A286B5740000800YYYYYYYY0000000000000204XXXX
 # YYYYYYYY - file size in little endian
-# Unsigned int    32bits  Min size 0   Max Size 4294967295
 # XXXX - CRC 
 
-size = 1234 # We will need to calculate this 
+size = 111159808 # We will need to calculate this 
 size = Array(size).pack('V')
 
 #            55  1A  04  B1  2A  28  6B  57  40  00  08  00       YY  YY  YY  YY                       00  00  00  00  00  00  02  04       XX  XX
 #         "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00     \x00\x2A\xA0\x06                     \x00\x00\x00\x00\x00\x00\x02\x04     \x72\x43"
 
-#p3_pre = "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + "\x2A\xA0\x06\x00"                 + "\x00\x00\x00\x00\x00\x00\x02\x04" + "\x72\x43"
+p3_pre =  "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + "\x2A\xA0\x06\x00"                 + "\x00\x00\x00\x00\x00\x00\x02\x04" + "\x72\x43"
 
-puts "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00".encoding
-puts size.encoding
+#p3_pre  = "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + size.force_encoding('UTF-8')        + "\x00\x00\x00\x00\x00\x00\x02\x04"
 
-p3_pre  = "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + size.force_encoding('UTF-8')        + "\x00\x00\x00\x00\x00\x00\x02\x04"
+#crc = crc16(p3_pre)
+#crc = Array(crc).pack('V')
+#puts "Crc: #{crc}"
 
-crc = crc16(p3_pre)
-crc = Array(crc).pack('V')
-puts "Crc: #{crc}"
+#p3 = p3_pre + crc
+#sp.write p3
 
-p3 = p3_pre + crc
-sp.write p3
-puts "file size in little endian"
+sp.write "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00\x00\x2A\xA0\x06\x00\x00\x00\x00\x00\x00\x02\x04\x72\x43"
+#puts "f0x8:whole image size: 111159808, path = 2, type = 4"
 
-# File Verification and Start Upgrade
+# File Verification and Start Upgrade - "0xa:Receive transfer complete message."
 p4 = "\x55\x1E\x04\x8A\x2A\x28\xF6\x57\x40\x00\x0A\x00\x66\x02\xC2\x6E\xD0\x72\x95\x81\x24\x68\x53\xD7\xC9\x88\xA4\xAE\x7A\xE4"
 sp.write p4
-puts "File Verification and Start Upgrade"
+#puts "0xa:Receive transfer complete message."
 
