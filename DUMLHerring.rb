@@ -119,7 +119,7 @@ sleep(2)
 
 # Enable Reporting - report status:  0:0
 p2 = "\x55\x0E\x04\x66\x2A\x28\x68\x57\x40\x00\x0C\x00\x88\x20"
-sp.write p2
+#sp.write p2
 #puts "report status:  0:0"
 sleep(2)
 
