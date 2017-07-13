@@ -148,7 +148,12 @@ ftp.close
 # YYYYYYYY - file size in little endian
 # XXXX - CRC 
 
-size = 111159808 # We will need to calculate this 
+# The *known* size 111159808 aka "\x00\x2A\xA0\x06" goes with V01.03.0800_Mavic_dji_system.bin
+
+#size = File.size?("V01.03.0900_Mavic_dji_system.bin")
+size = File.size?("V01.03.0800_Mavic_dji_system.bin")
+puts "File size is #{size}"
+ 
 size = Array(size).pack('V')
 size = size.to_s.force_encoding('UTF-8') 
 
