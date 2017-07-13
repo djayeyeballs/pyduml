@@ -89,6 +89,20 @@ else
 end
 
 
+# Auto Find serial? 
+#         Product ID: 0x001f
+#          Vendor ID: 0x2ca3
+#          Version: ff.ff
+#          Serial Number: 0123456789ABCDEF
+#          Speed: Up to 480 Mb/sec
+#          Manufacturer: DJI
+#          Location ID: 0x14300000 / 18
+# you can find this via # system_profiler SPUSBDataType
+# 
+# sh-3.2# ls -al /dev/tty.usbmodem1435 
+# crw-rw-rw-  1 root  wheel   19,  46 Jul 12 23:40 /dev/tty.usbmodem1435
+# note the 0x143... and usbmodem143...
+
 port_str = "/dev/tty.usbmodem1435"  #may be different for you  
 baud_rate = 115200  
 data_bits = 8  
@@ -99,13 +113,30 @@ sp = SerialPort.new(port_str, baud_rate, data_bits, stop_bits, parity)
 
 # Enter upgrade mode (delete old file if exists)
 p1 = "\x55\x16\x04\xFC\x2A\x28\x65\x57\x40\x00\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x27\xD3"
-sp.write p1
-puts "Enter upgrade mode"
+#sp.write p1
+#puts "Enter upgrade mode"
 
 # Enable Reporting
 p2 = "\x55\x0E\x04\x66\x2A\x28\x68\x57\x40\x00\x0C\x00\x88\x20"
-sp.write p2
-puts "Enable Reporting"
+#sp.write p2
+#puts "Enable Reporting"
+
+# Drop upgrade package. 
+require 'net/ftp'
+ftp = Net::FTP.new('192.168.42.2')
+ftp.passive = true
+ftp.login("RedHerring","IsDaRealest!" )
+puts "Logged into the FTPD"
+begin
+    firmware = File.new("fireworks.tar")
+    puts "Dropping the hot sauce"
+    ftp.putbinaryfile(firmware, "/upgrade/dji_system.bin")
+    puts "File upload is done"
+rescue Net::FTPPermError
+    puts "failsauce"
+end
+ftp.close
+
 
 # 551A04B12A286B5740000800YYYYYYYY0000000000000204XXXX
 # YYYYYYYY - file size in little endian
@@ -115,19 +146,19 @@ puts "Enable Reporting"
 size = 1234 # We will need to calculate this 
 size = Array(size).pack('V')
 
-#            55  1A  04  B1  2A  28  6B  57  40  00  08  00       YY  YY  YY  YY       00  00  00  00  00  00  02  04       XX  XX
-#         "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00     \x00\x2A\xA0\x06     \x00\x00\x00\x00\x00\x00\x02\x04     \x72\x43"
+#            55  1A  04  B1  2A  28  6B  57  40  00  08  00       YY  YY  YY  YY                       00  00  00  00  00  00  02  04       XX  XX
+#         "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00     \x00\x2A\xA0\x06                     \x00\x00\x00\x00\x00\x00\x02\x04     \x72\x43"
 
-#p3_pre = "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + "\x2A\xA0\x06\x00" + "\x00\x00\x00\x00\x00\x00\x02\x04" + "\x72\x43"
+#p3_pre = "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + "\x2A\xA0\x06\x00"                 + "\x00\x00\x00\x00\x00\x00\x02\x04" + "\x72\x43"
 
 puts "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00".encoding
 puts size.encoding
 
-p3_pre  = "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" +        size        + "\x00\x00\x00\x00\x00\x00\x02\x04"
+p3_pre  = "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + size.force_encoding('UTF-8')        + "\x00\x00\x00\x00\x00\x00\x02\x04"
 
-
-#crc = crc16(p3_pre).to_s(16)
-#puts "Crc: #{crc}"
+crc = crc16(p3_pre)
+crc = Array(crc).pack('V')
+puts "Crc: #{crc}"
 
 p3 = p3_pre + crc
 sp.write p3
