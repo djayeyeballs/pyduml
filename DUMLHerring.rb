@@ -150,14 +150,29 @@ ftp.close
 
 size = 111159808 # We will need to calculate this 
 size = Array(size).pack('V')
-p size.unpack('H*')
+p "We are"
+puts size.unpack('H*')
+size = size.to_s.force_encoding('UTF-8') 
+
+#print "                        "
+#p size.unpack('H*')
+#size = size.chars.each_slice(2).map(&:join)[1..4]
+#size = size.to_s
+#size = "AAAA"
+
 
 #            55  1A  04  B1  2A  28  6B  57  40  00  08  00       YY  YY  YY  YY                       00  00  00  00  00  00  02  04       XX  XX
 #         "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00     \x00\x2A\xA0\x06                     \x00\x00\x00\x00\x00\x00\x02\x04     \x72\x43"
 
-p3_pre =  "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + "\x2A\xA0\x06\x00"                 + "\x00\x00\x00\x00\x00\x00\x02\x04" + "\x72\x43"
+p3_pre =  "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + size                               + "\x00\x00\x00\x00\x00\x00\x02\x04" + "\x72\x43"
+#p size.unpack('H*')
+p p3_pre.unpack('H*')
 
-sp.write  "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + "\x00\x2A\xA0\x06"                 + "\x00\x00\x00\x00\x00\x00\x02\x04" + "\x72\x43"
+shit =  "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + "\x00\x2A\xA0\x06"                 + "\x00\x00\x00\x00\x00\x00\x02\x04" + "\x72\x43"
+p "We wanna be"
+p shit.unpack('H*')
+
+#sp.write  "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + "\x00\x2A\xA0\x06"                 + "\x00\x00\x00\x00\x00\x00\x02\x04" + "\x72\x43"
 #                                                                   ^--- what happened here!? 
 
 #p3_pre  = "\x55\x1A\x04\xB1\x2A\x28\x6B\x57\x40\x00\x08\x00" + size.force_encoding('UTF-8')        + "\x00\x00\x00\x00\x00\x00\x02\x04"
@@ -175,3 +190,4 @@ p4 = "\x55\x1E\x04\x8A\x2A\x28\xF6\x57\x40\x00\x0A\x00\x66\x02\xC2\x6E\xD0\x72\x
 #sp.write p4
 #puts "0xa:Receive transfer complete message."
 
+# To debug use: busybox tail -f /ftp/upgrade/dji/log/upgrade00.log 
