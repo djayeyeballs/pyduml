@@ -1,9 +1,13 @@
+# This is a hard coded commit for root: use $ perl -e 'print "A" x 111155712' >> fireworks.tar to padd it out
+#
 # The DUMLHerring... aka DumbHerring (for noobs! no Assistant needed)
 # Both provides root, and downgrade capability. 
 #
 # First exploited by The_Lord
 # Props to hdness, for his stard on pyduml, from which this was based. 
 # 
+# To debug use: busybox tail -f /ftp/upgrade/dji/log/upgrade00.log 
+#
 # $ adb pull /data/dji_system.bin
 # /data/dji_system.bin: 1 file pulled. 2.2 MB/s (111158784 bytes in 47.136s)
 # $ tar tvf dji_system.bin
@@ -30,7 +34,7 @@
 
 require 'rubygems'
 require 'serialport'
-
+require 'net/http'
 # taken from http://www.hadermann.be/blog/32/ruby-crc16-implementation/
 
 CCITT_16 = [             
@@ -111,6 +115,8 @@ parity = SerialPort::NONE
 
 sp = SerialPort.new(port_str, baud_rate, data_bits, stop_bits, parity)  
 
+puts "You should: busybox tail -f /ftp/upgrade/dji/log/upgrade00.log" 
+
 # Enter upgrade mode (delete old file if exists) - 0x7:received cmd to request enter upgrade mode, peer_id=0xa01, this_host=0x801
 p1 = "\x55\x16\x04\xFC\x2A\x28\x65\x57\x40\x00\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x27\xD3"
 sp.write p1
@@ -135,7 +141,7 @@ begin
     puts "Dropping the hot sauce"
     ftp.putbinaryfile(firmware, "/upgrade/dji_system.bin")
     puts ftp.ls("/upgrade/dji_system.bin")
-    puts ftp.ls("/upgrade/.bin/")
+    puts ftp.mkdir("/upgrade/.bin/")
     puts "File upload is done"
 rescue Net::FTPPermError
     puts "failsauce"
@@ -184,4 +190,4 @@ p4 = "\x55\x1E\x04\x8A\x2A\x28\xF6\x57\x40\x00\x0A\x00\x66\x02\xC2\x6E\xD0\x72\x
 sp.write p4
 #puts "0xa:Receive transfer complete message."
 
-# To debug use: busybox tail -f /ftp/upgrade/dji/log/upgrade00.log 
+
