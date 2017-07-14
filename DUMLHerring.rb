@@ -136,7 +136,14 @@ ftp.passive = true
 ftp.login("RedHerring","IsDaRealest!" )
 puts "Logged into the FTPD"
 begin
-#    firmware = File.new("fireworks.tar")
+    fireworksmd5 = %x[md5 fireworks.tar | cut -f4 -d" "]
+    fireworkssize = File.size?("fireworks.tar")
+    print fireworksmd5
+    print fireworksize
+
+    # Should match 6d50cae11993dc9996c293914769a998 & 4096 IF provided by us. 
+    exit
+
     firmware = File.new(ARGV[0])
     puts "Dropping the hot sauce"
     ftp.putbinaryfile(firmware, "/upgrade/dji_system.bin")
